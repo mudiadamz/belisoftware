@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Homepage Belisoftware</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+    <link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.ico">
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/custom.css">
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300;400;500;700;900&display=swap">
+    <link rel="stylesheet" href="assets/css/fontawesome.min.css">
+</head>
+
+<body>
+
+<div data-component="header"></div>
+
+
+<!-- Start Content -->
+<div class="container py-5">
+    <div class="row">
+
+        <div class="col-lg-12">
+            <h3>Featured Products</h3>
+            <hr/>
+            <div class="row" id="items">
+            </div>
+
+            <div class="row">
+                <ul class="pagination pagination-lg justify-content-center">
+                    <li class="page-item disabled">
+                        <a class="page-link active bg-primary text-light" href="#" tabindex="-1">1</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</div>
+<!-- End Content -->
+
+<div data-component="footer"></div>
+
+<script src="assets/js/jquery-1.11.0.min.js"></script>
+<script src="assets/js/jquery-migrate-1.2.1.min.js"></script>
+<script src="assets/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/templatemo.js"></script>
+<script src="assets/js/custom.js"></script>
+<script src="assets/js/component.js"></script>
+<!--firebase-->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="assets/js/firebase.js"></script>
+
+<script type="text/javascript">
+  $(function () {
+    var $table = $(document).find("#items");
+    var SI_SYMBOL = ["", "Rb", "Jt", "Ml", "Tr", "P", "E"];
+
+    function price(number) {
+
+      // what tier? (determines SI symbol)
+      var tier = Math.log10(Math.abs(number)) / 3 | 0;
+
+      // if zero, we don't need a suffix
+      if (tier === 0) return number;
+
+      // get suffix and determine scale
+      var suffix = SI_SYMBOL[tier];
+      var scale = Math.pow(10, tier * 3);
+
+      // scale the number
+      var scaled = number / scale;
+
+      // format number and add suffix
+      return scaled.toFixed(1) + suffix;
+    }
+
+    firebase.database().ref(TABLE1).on('value', (snapshot) => {
+      $table.empty();
+      const items = snapshot.val();
+      if (!items) {
+        $(document).find("body").append("Head to panel and add items")
+      }
+      var numbering = 1;
+      $.each(items, function (id, item) {
+        loadImage(item.photo);
+        var itemStatus = item.status === "Available" ? "bg-success" : "bg-danger";
+
+        loadImage(item.photo);
+        $table.append("<div class=\"col-12 col-md-6 col-lg-4\">" +
+          "                    <div class=\"card mb-4 product-wap rounded-0\">" +
+          "                        <div class=\"card rounded-0\">" +
+          "                            <img class=\"card-img rounded-0 img-fluid " + item.photo + "\" src=\"assets/img/placeholder.gif\" alt=\"thumb\">" +
+          "                        </div>" +
+          "                        <div class=\"card-body\">" +
+          "                            <h3>" + item.name + "</h3>" +
+          "                            <div class='list-item-description'>" + item.description + "</div>" +
+          "                            <ul class=\"list-unstyled d-flex justify-content-center mb-1\">" +
+          "                                <li>" +
+          "                                    <i class=\"text-warning fa fa-star\"></i>" +
+          "                                    <i class=\"text-warning fa fa-star\"></i>" +
+          "                                    <i class=\"text-warning fa fa-star\"></i>" +
+          "                                    <i class=\"text-warning fa fa-star\"></i>" +
+          "                                    <i class=\"text-warning fa fa-star\"></i>" +
+          "                                </li>" +
+          "                            </ul>" +
+          "                            <p class=\"text-center mb-0\">Rp " + price(item.price) + "</p>" +
+          "                            <a class=\"btn btn-primary btn-lg\" href=\"product-detail.html?id=" + item.id + "\">Buy Now</a>" +
+          "                        </div>" +
+          "                    </div>" +
+          "                </div>");
+        numbering++;
+      });
+    });
+
+  })
+</script>
+<!-- End Script -->
+</body>
+
+</html>

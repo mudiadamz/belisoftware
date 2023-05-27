@@ -1,0 +1,244 @@
+<div class="row">
+    <div class="col-6"><h3>Item List</h3></div>
+    <div class="col-6">
+        <button class="btn btn-success float-end" data-bs-toggle="modal" data-bs-target="#exampleModal">
+            <i class="fa fa-plus-circle"></i>
+            New Item
+        </button>
+    </div>
+</div>
+
+<div class="row">
+    <div class="table-responsive mt-2">
+        <table class="table table-bordered" id="tableMember">
+            <thead class="table-light">
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Thumb</th>
+                <th scope="col">Name</th>
+                <th scope="col">Description</th>
+                <th scope="col">Price</th>
+                <th scope="col">Status</th>
+                <th scope="col">Action</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="mainForm">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel">Create New Item</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label" for="fullName">Name</label>
+                        <input class="form-control" name="fullName" required id="fullName">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="description">Description</label>
+                        <textarea class="form-control" name="description" required id="description" rows="5"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="price">Price</label>
+                        <input class="form-control" name="price" type="number" required id="price">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Photos</label>
+                        <input type="file" class="form-control" name="photo" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="exampleModal2" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <form id="mainForm2">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="exampleModalLabel2">Update Photo</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <input type="hidden" name="photoRef">
+                        <input type="hidden" name="photoId">
+                        <input type="hidden" name="photoFullName">
+                        <input type="file" class="form-control" name="photo" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+<script>
+  function loadData() {
+    var $table = $(document).find("#tableMember");
+
+    firebase.database().ref(TABLE1).on('value', (snapshot) => {
+      $table.find("tbody").empty();
+      const items = snapshot.val();
+      if (!items) {
+        $table.find("tbody").append('<tr>' +
+          '<td colspan="5">No data!</td>' +
+          '</tr>');
+      }
+      var numbering = 1;
+      $.each(items, function (id, item) {
+        loadImage(item.photo);
+        $table.find("tbody").append('<tr data-id="' + id + '">' +
+          '<td>' + numbering + '</td>' +
+          '<td>' +
+          '<img ' +
+          ' src="avatar.png" alt="Load.." ' +
+          ' data-photo="' + item.photo + '" ' +
+          ' data-fullname="' + item.name + '" ' +
+          ' class="' + item.photo + '" ' +
+          ' style="width: 3rem; height: 3rem" ' +
+          ' data-bs-toggle="modal" ' +
+          ' data-bs-target="#exampleModal2"/>' +
+          '</td>' +
+          '<td><input class="text-change" ' +
+          ' style="background-color: transparent;border: 0" value="' + item.name + '" data-colname="name"></td>' +
+          '<td><textarea class="text-change" ' +
+          ' style="background-color: transparent;border: 0" data-colname="description">' + item.description + '</textarea></td>' +
+          '<td><input type="number" class="text-change" ' +
+          ' style="background-color: transparent;border: 0" value="' + item.price + '"  data-colname="price"></td>' +
+          '<td>' +
+          '<select class="select-status" data-id="' + id + '">' +
+          '<option value="Available" ' + (item.status === "Available" ? 'selected' : '') + '>Available</option>' +
+          '<option value="In Service" ' + (item.status === "In Service" ? 'selected' : '') + '>In Service</option>' +
+          '</select>' +
+          '</td>' +
+          '<td>' +
+          '<button class="btn btn-danger btn-sm btn-delete" data-id="' + id + '" data-photo="' + item.photo + '">Delete</button> ' +
+          '</td>' +
+          '</tr>');
+        numbering++;
+      });
+    });
+
+  }
+
+  $(function () {
+    // $(document).find("#tableMember").dataTable();
+    loadData();
+  });
+  $(document).on("submit", "#mainForm", function (e) {
+    e.preventDefault();
+    var $form = $(this);
+    var fullName = $form.find('[name="fullName"]').val();
+    var photo = $form.find('[name="photo"]').prop("files")[0];
+
+    //upload to firebase storage
+    if (photo) {
+      var id = moment().format("YYYYMMDDHHmmss");
+      var photoName = fullName.replace(/\W+/g, "_").toLowerCase() + "_" + id;
+      var thisRef = firebase.storage().ref().child(photoName);
+      thisRef.put(photo).then(function (snapshot) {
+        //save to database
+        saveUserData(id, {
+          id: id,
+          name: fullName,
+          price: parseFloat($form.find('[name="price"]').val()),
+          description: $form.find('[name="description"]').val(),
+          photo: photoName,
+          status: "Available",
+        });
+        $('#exampleModal').modal('hide');
+        $form[0].reset();
+      });
+    }
+
+  })
+  $(document).on("change", ".select-status", function (e) {
+    var newStatus = $(this).val();
+    var id = $(this).data("id");
+    updateUserData(id, {
+      status: newStatus,
+    });
+  });
+  $(document).on("click", ".btn-delete", function (e) {
+    if (window.confirm("Are you sure?")) {
+      var id = $(this).data("id");
+      var photo = $(this).data("photo");
+      firebase.database().ref(TABLE1 + "/" + id).remove().then(() => {
+        console.log("Remove db ", id)
+      }).catch((error) => {
+        console.error(error)
+      });
+
+      //remove storage
+      var fileRef = photo + '_640x640';
+      firebase.storage().ref().child(fileRef).delete().then(() => {
+        console.log("Remove storage ", fileRef)
+      }).catch((error) => {
+        console.error(error)
+      });
+    }
+  });
+  $(document).on("change", ".text-change", function (e) {
+    var id = $(this).closest('[data-id]').data("id");
+    var colName = $(this).closest('[data-colname]').data("colname");
+    var data = {};
+    var value = $(this).val();
+    if($(this).attr("type")==="number") value = parseFloat($(this).val());
+    data[colName] = value;
+    updateUserData(id, data);
+  });
+  $('#exampleModal2').on('show.bs.modal', function (e) {
+    var photoId = $(e.relatedTarget).closest('[data-id]').data('id');
+    var photoRef = $(e.relatedTarget).data('photo');
+    var fullName = $(e.relatedTarget).data('fullname');
+
+    $(this).find('[name="photoRef"]').val(photoRef);
+    $(this).find('[name="photoId"]').val(photoId);
+    $(this).find('[name="photoFullName"]').val(fullName);
+  });
+  $(document).on("submit", "#mainForm2", function (e) {
+    e.preventDefault();
+
+    var $form = $(this);
+    var photo = $form.find('[name="photo"]').prop("files")[0];
+    var photoRef = $form.find('[name="photoRef"]').val();
+    var id = $form.find('[name="photoId"]').val();
+    var fullName = $form.find('[name="photoFullName"]').val();
+
+    //upload to firebase storage
+    if (photo) {
+      var photoName = fullName.replace(/\W+/g, "_").toLowerCase() + "_" + id;
+      var thisRef = firebase.storage().ref().child(photoName);
+      thisRef.put(photo).then(function (snapshot) {
+        //save to database
+        updateUserData(id, {
+          photo: photoName,
+        });
+        $('#exampleModal2').modal('hide');
+        $form[0].reset();
+
+      });
+
+      //delete older photo
+      firebase.storage().ref().child(photoRef + "_640x640").delete();
+    }
+
+  });
+</script>

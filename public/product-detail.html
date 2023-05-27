@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Product Detail Belisoftware.com</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="apple-touch-icon" href="assets/img/apple-icon.png">
+    <link rel="shortcut icon" type="image/x-icon" href="assets/img/favicon.ico">
+
+    <link rel="stylesheet" href="assets/css/bootstrap.min.css">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <link rel="stylesheet" href="assets/css/custom.css">
+
+    <!-- Load fonts style after rendering the layout styles -->
+    <link rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Roboto:wght@100;200;300;400;500;700;900&display=swap">
+    <link rel="stylesheet" href="assets/css/fontawesome.min.css">
+
+    <!-- Slick -->
+    <link rel="stylesheet" type="text/css" href="assets/css/slick.min.css">
+    <link rel="stylesheet" type="text/css" href="assets/css/slick-theme.css">
+</head>
+
+<body>
+
+<div data-component="header"></div>
+
+
+<!-- Open Content -->
+<section class="bg-light">
+    <div class="container pb-5">
+        <div class="row">
+            <div class="col-lg-5 mt-5">
+                <div class="card mb-3">
+                    <img class="card-img img-fluid" src="assets/img/placeholder.gif" alt="Card image cap"
+                         id="productDetailImg">
+                </div>
+            </div>
+            <!-- col end -->
+            <div class="col-lg-7 mt-5">
+                <div class="card">
+                    <div class="card-body">
+                        <h1 class="h2" id="name"></h1>
+                        <p class="h3 py-2"><span id="price"></span></p>
+                        <p class="py-2">
+                            <i class="fa fa-star text-warning"></i>
+                            <i class="fa fa-star text-warning"></i>
+                            <i class="fa fa-star text-warning"></i>
+                            <i class="fa fa-star text-warning"></i>
+                            <i class="fa fa-star text-warning"></i>
+                        </p>
+                        <div>
+                            <hr/>
+                        </div>
+                        <h6>Description:</h6>
+                        <div id="description" class="mb-5"></div>
+
+                        <div>
+                            <div class="row pb-3">
+                                <div class="col d-grid">
+                                    <button class="btn btn-success btn-lg" id="checkoutBtn" type="button">Check out
+                                        </a>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Close Content -->
+
+
+<div data-component="footer"></div>
+
+
+<!-- Start Script -->
+<script src="assets/js/jquery-1.11.0.min.js"></script>
+<script src="assets/js/jquery-migrate-1.2.1.min.js"></script>
+<script src="assets/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/templatemo.js"></script>
+<script src="assets/js/custom.js"></script>
+<!-- End Script -->
+
+<!-- Start Slider Script -->
+<script src="assets/js/slick.min.js"></script>
+<!-- End Slider Script -->
+
+<!--firebase-->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<script src="assets/js/firebase.js"></script>
+<script src="assets/js/currency.js"></script>
+<script src="assets/js/component.js"></script>
+<script>
+
+
+  $(function () {
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get('id');
+
+    firebase.database().ref(TABLE1 + "/" + id).on('value', (snapshot) => {
+      const item = snapshot.val();
+      $(document).find("#productDetailImg").addClass(item.photo);
+      loadImage(item.photo)
+      $(document).find("#name").text(item.name);
+      $(document).find("#description").text(item.description);
+      $(document).find("#price").data("price", item.price).text(currencyFormat.format(item.price));
+    });
+
+    $(document).on("click", "#checkoutBtn", function (e) {
+      e.preventDefault();
+      var item = {
+        id: id, name: $(document).find("#name").text(),
+        quantity: 1, price: parseFloat($(document).find("#price").data("price"))
+      };
+      localStorage.setItem("cart", JSON.stringify([item]));
+      window.location.href = "checkout.html";
+    })
+  });
+
+</script>
+</body>
+
+</html>
