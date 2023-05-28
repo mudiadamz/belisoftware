@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-    <title>Account Belisoftware.com</title>
+    <title>Transaction List Belisoftware.com</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="robots" content="noindex">
@@ -55,29 +55,14 @@
                 <div data-component="account-sidebar"></div>
             </div>
             <div class="col-lg-9 col-md-8">
-                <div class="card card-secondary" id="mainForm">
-                    <div class="card-header">
-                        <h3 class="h3 card-title">Info</h3>
-                    </div>
-                    <div class="card-body">
-
-                        <table class="table table-bordered" id="userDetail">
-                            <thead>
-                            </thead>
-                            <tbody>
-
-                            </tbody>
-                        </table>
-
-                    </div>
-                </div>
+                <h3 class="h3 card-title">Transaction List</h3>
+                <div id="mainContent"></div>
             </div>
         </div>
     </div>
 </section>
 <!-- Close Content -->
 
-<div data-component="account-footer"></div>
 <div data-component="footer"></div>
 
 <!-- Start Script -->
@@ -94,24 +79,71 @@
 
 <!--firebase-->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="assets/js/firebase.js"></script>
 <script src="assets/js/user-auth.js"></script>
 <script>
-
+  function getStatus(statusNumber){
+    var status = {
+      "0": "Pending",
+      "1": "Paid",
+      "2": "Process",
+      "3": "Delivery",
+      "4": "Arrived",
+      "5": "Confirmed",
+      "6": "Failed",
+      "7": "Refund",
+    };
+    return status[statusNumber];
+  }
   $(function () {
-    firebase.auth().onAuthStateChanged((user) => {
-      if (user) {
-        $(document).find("#userDetail tbody").append(
-          '<tr><td>Photo</td><td><img src="'+user.photoURL+'" alt="photo" style="height: 5rem"></td></tr>' +
-          '<tr><td>Full Name</td><td>' + user.displayName + '</td></tr>' +
-          '<tr><td>Email</td><td>' + user.email + '</td></tr>')
-      }
-    });
-  });
+    var dateFormat = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
 
+    firebase.auth().onAuthStateChanged((user) => {
+      fetch(firebaseConfig.databaseURL + "/" + TABLE_ORDERS + "/" + user.uid + ".json")
+        .then(resp => resp.json())
+        .then(invoices => {
+          if(!invoices){
+            $(document).find("#mainContent").append("No order yet");
+            return;
+          }
+          for (var i in invoices) {
+            var items = invoices[i];
+            var invoiceId = items[0].invoiceId;
+            var time = items[0].timestamp;
+            var status = getStatus(items[0].status);
+            $(document).find("#mainContent").append(
+              '<div class="card mb-3" id="' + invoiceId + '">' +
+              '<div class="card-header">' +
+              '<div>Invoice Number: ' + invoiceId + '</div>' +
+              '</div> ' +
+              '<div class="card-body"> ' +
+              '<div class="mb-3"><b>Status</b>: '+status+'</div>' +
+              '<div class="mb-3"><b>Date</b>: '+new Date(time).toLocaleDateString("en-US", dateFormat)+'</div>' +
+              '<div class="mb-3"><b>Total</b>: <span class="total"></span> </div>' +
+              '<table class="table table-bordered table-sm">' +
+              '<thead><tr><th>Item</th><th>Quantity</th></tr></thead>' +
+              '<tbody></tbody>' +
+              '</table>' +
+              '<div></div>' +
+              '</div>' +
+              '</div>'
+            );
+            var total = 0;
+            for(var j in items){
+              var item = items[j];
+              $(document).find("#"+invoiceId).find("table tbody").append('<tr>' +
+                '<td>'+item.name+'</td>' +
+                '<td>'+item.quantity+'</td>' +
+                '</tr>');
+              total += (item.price*item.quantity);
+            }
+            $(document).find("#"+invoiceId).find(".total").text(currencyFormat.format(total));
+          }
+        });
+    });
+  })
 </script>
 </body>
 

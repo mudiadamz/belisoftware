@@ -57,9 +57,14 @@
         <div class="row">
             <div class="col-lg-8 col-md-12 mt-5">
                 <div class="alert-success alert" id="messageSuccess" style="display: none">Pesanan telah terkirim.
-                    Menunggu proses verifikasi pembayaran!
+                    Menunggu proses verifikasi pembayaran!<br/>
+                    <a href="/transaction.html" class="btn btn-outline-primary">Check Order Status</a>
                 </div>
-                <div class="alert alert-danger" id="noItem" style="display: none">No item in the cart!</div>
+                <div class="alert alert-danger" id="noItem" style="display: none">
+                    No item in the cart!<br/>
+
+                    <a href="/index.html" class="btn btn-outline-primary">Return home</a>
+                </div>
                 <div class="card card-secondary" id="mainForm">
                     <div class="card-header">
                         <h3 class="card-title">Checkout</h3>
@@ -81,7 +86,7 @@
                                 Login with Google
                             </button>
                         </div>
-                        <div id="checkoutItem" style="display:none;">
+                        <div id="checkoutItem" class="table-responsive" style="display:none;">
                             <table class="table table-bordered" id="itemTable">
                                 <thead>
                                 <tr>
@@ -124,7 +129,8 @@
                             </div>
 
                             <div class="form-group">
-                                <button class="btn btn-lg btn-primary" id="submitPayment" disabled>Submit Payment</button>
+                                <button class="btn btn-lg btn-primary" id="submitPayment" disabled>Submit Payment
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -138,10 +144,8 @@
 <div data-component="footer"></div>
 
 <!-- Start Script -->
-<script src="assets/js/jquery-1.11.0.min.js"></script>
-<script src="assets/js/jquery-migrate-1.2.1.min.js"></script>
+<script src="assets/js/jquery.min.js"></script>
 <script src="assets/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/templatemo.js"></script>
 <script src="assets/js/custom.js"></script>
 <!-- End Script -->
 
@@ -153,24 +157,11 @@
 
 <!--firebase-->
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-storage.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 <script src="assets/js/firebase.js"></script>
+<script src="assets/js/post.js"></script>
 <script>
-  $(document).on("click", "#loginWithGoogle", function (e) {
-    var provider = new firebase.auth.GoogleAuthProvider();
-    console.log("provider", provider)
-    firebase.auth()
-      .signInWithPopup(provider)
-      .then((result) => {
-        var credential = result.credential;
-        var token = credential.accessToken;
-        var user = result.user;
-      }).catch((error) => {
-      console.error(error)
-    });
-  })
   $(function () {
     firebase.auth().onAuthStateChanged((user) => {
       if (!user) {
@@ -181,6 +172,17 @@
           '<tr><td>Email</td><td>' + user.email + '</td></tr>');
         $(document).find("#checkoutItem").show();
       }
+    });
+  });
+
+  $(document).on("click", "#loginWithGoogle", function (e) {
+    var provider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth()
+      .signInWithPopup(provider)
+      .then((result) => {
+        window.location.reload();
+      }).catch((error) => {
+      window.alert(error);
     });
   });
 
@@ -211,7 +213,6 @@
   $(document).on("change", '[name="ptype"]', function (e) {
     e.preventDefault();
     var pType = parseInt($(this).val()) || 0;
-    console.log($(this).val())
     $(document).find(".payment-sec").hide();
     if (pType === 1) {
       $(document).find("#cardDebit").show();
@@ -222,15 +223,61 @@
     }
   });
 
+  function errorHandle() {
+    $(document).find("#submitPayment").prop("disabled", false);
+    $(document).find(".overlay").hide();
+  }
+
   $(document).on("click", "#submitPayment", function (e) {
     e.preventDefault();
+    var cartItems = JSON.parse(localStorage.getItem("cart")) || [];
+    if (cartItems.length === 0) {
+      window.location.href = "/index.html?error=no+item+in+cart";
+      return;
+    }
+
+    $(document).find("#submitPayment").prop("disabled", true);
     $(document).find(".overlay").show();
-    localStorage.removeItem("cart");
-    $(document).find("#mainForm").hide();
-    $(document).find("#messageSuccess").show();
-    setTimeout(function () {
-      $(document).find(".overlay").hide();
-    }, 2000);
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (!user) {
+        console.error("not login");
+        errorHandle();
+        window.location.reload();
+        return;
+      }
+
+      user.getIdToken().then((idToken) => {
+        var orderTime = new Date().getTime();
+        var orders = cartItems.map(function (row, i) {
+          row.uid = user.uid;
+          row.userDisplayName = user.displayName;
+          row.userEmail = user.email;
+          row.timestamp = orderTime;
+          row.invoiceId = orderTime.toString();
+          row.status = 0;
+          return row;
+        });
+
+        postData(firebaseConfig.databaseURL + "/" + TABLE_ORDERS + "/" + user.uid + ".json?auth=" + idToken, orders)
+          .then(resp => {
+            if (!resp.ok) {
+              var resJson = resp.json();
+              errorHandle();
+              return;
+            }
+
+            localStorage.removeItem("cart");
+            $(document).find("#mainForm").hide();
+            $(document).find("#messageSuccess").show();
+            $(document).find(".overlay").hide();
+          }).catch(resp => {
+          window.alert(resp.error)
+        });
+      });
+    });
+    /*
+     */
   })
 </script>
 </body>

@@ -79,10 +79,8 @@
 
 
 <!-- Start Script -->
-<script src="assets/js/jquery-1.11.0.min.js"></script>
-<script src="assets/js/jquery-migrate-1.2.1.min.js"></script>
+<script src="assets/js/jquery.min.js"></script>
 <script src="assets/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/templatemo.js"></script>
 <script src="assets/js/custom.js"></script>
 <!-- End Script -->
 
@@ -98,14 +96,11 @@
 <script src="assets/js/currency.js"></script>
 <script src="assets/js/component.js"></script>
 <script>
-
-
   $(function () {
-    const urlParams = new URLSearchParams(window.location.search);
-    const id = urlParams.get('id');
+    var urlParams = new URLSearchParams(window.location.search);
+    var id = urlParams.get('id');
 
-    firebase.database().ref(TABLE1 + "/" + id).on('value', (snapshot) => {
-      const item = snapshot.val();
+    fetch(firebaseConfig.databaseURL + "/" + TABLE_ITEMS + "/" + id + ".json").then(resp => resp.json()).then(item => {
       $(document).find("#productDetailImg").addClass(item.photo);
       loadImage(item.photo)
       $(document).find("#name").text(item.name);

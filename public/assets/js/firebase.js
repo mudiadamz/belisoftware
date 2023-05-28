@@ -1,7 +1,7 @@
 //Replace this config with yours
 const firebaseConfig = {
   apiKey: "AIzaSyBka-vP9sJzvFjQsRMQfAmIwb_xGcr-WwQ",
-  authDomain: "belisoftware.firebaseapp.com",
+  authDomain: "belisoftware.com",
   databaseURL: "https://belisoftware-default-rtdb.asia-southeast1.firebasedatabase.app",
   projectId: "belisoftware",
   storageBucket: "belisoftware.appspot.com",
@@ -13,15 +13,17 @@ firebase.initializeApp(firebaseConfig);
 
 
 //tables
-var TABLE1 = "items";
+var TABLE_ITEMS = "items";
+var TABLE_ORDERS = "orders";
+var TABLE_CATEGORY = "category";
 
 //functions
 function saveUserData(userId, update) {
-  firebase.database().ref(TABLE1 + "/" + userId).set(update);
+  firebase.database().ref(TABLE_ITEMS + "/" + userId).set(update);
 }
 
 function updateUserData(userId, update) {
-  firebase.database().ref(TABLE1 + "/" + userId).update(update);
+  firebase.database().ref(TABLE_ITEMS + "/" + userId).update(update);
 }
 
 function loadImage(imageRef) {

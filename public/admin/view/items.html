@@ -18,6 +18,7 @@
                 <th scope="col">Name</th>
                 <th scope="col">Description</th>
                 <th scope="col">Price</th>
+                <th scope="col">Category</th>
                 <th scope="col">Status</th>
                 <th scope="col">Action</th>
             </tr>
@@ -48,6 +49,10 @@
                     <div class="mb-3">
                         <label class="form-label" for="price">Price</label>
                         <input class="form-control" name="price" type="number" required id="price">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="category">Category</label>
+                        <select class="form-control category-box" name="category" required id="category"></select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Photos</label>
@@ -93,7 +98,7 @@
   function loadData() {
     var $table = $(document).find("#tableMember");
 
-    firebase.database().ref(TABLE1).on('value', (snapshot) => {
+    firebase.database().ref(TABLE_ITEMS).on('value', (snapshot) => {
       $table.find("tbody").empty();
       const items = snapshot.val();
       if (!items) {
@@ -108,7 +113,7 @@
           '<td>' + numbering + '</td>' +
           '<td>' +
           '<img ' +
-          ' src="avatar.png" alt="Load.." ' +
+          ' src="/assets/img/placeholder.gif" alt="Load.." ' +
           ' data-photo="' + item.photo + '" ' +
           ' data-fullname="' + item.name + '" ' +
           ' class="' + item.photo + '" ' +
@@ -116,12 +121,22 @@
           ' data-bs-toggle="modal" ' +
           ' data-bs-target="#exampleModal2"/>' +
           '</td>' +
-          '<td><input class="text-change" ' +
-          ' style="background-color: transparent;border: 0" value="' + item.name + '" data-colname="name"></td>' +
-          '<td><textarea class="text-change" ' +
-          ' style="background-color: transparent;border: 0" data-colname="description">' + item.description + '</textarea></td>' +
-          '<td><input type="number" class="text-change" ' +
-          ' style="background-color: transparent;border: 0" value="' + item.price + '"  data-colname="price"></td>' +
+          '<td>' +
+          '<input class="text-change" ' +
+          ' style="background-color: transparent;border: 0" value="' + item.name + '" data-colname="name">' +
+          '</td>' +
+          '<td>' +
+          '<textarea class="text-change" ' +
+          ' style="background-color: transparent;border: 0" data-colname="description">' + item.description + '</textarea>' +
+          '</td>' +
+          '<td>' +
+          '<input type="number" class="text-change" ' +
+          ' style="background-color: transparent;border: 0" value="' + item.price + '"  data-colname="price">' +
+          '</td>' +
+          '<td>' +
+          '<input class="text-change" ' +
+          ' style="background-color: transparent;border: 0" value="' + item.category + '"  data-colname="category">' +
+          '</td>' +
           '<td>' +
           '<select class="select-status" data-id="' + id + '">' +
           '<option value="Available" ' + (item.status === "Available" ? 'selected' : '') + '>Available</option>' +
@@ -162,6 +177,7 @@
           description: $form.find('[name="description"]').val(),
           photo: photoName,
           status: "Available",
+          category: $form.find('[name="category"]').val(),
         });
         $('#exampleModal').modal('hide');
         $form[0].reset();
@@ -180,7 +196,7 @@
     if (window.confirm("Are you sure?")) {
       var id = $(this).data("id");
       var photo = $(this).data("photo");
-      firebase.database().ref(TABLE1 + "/" + id).remove().then(() => {
+      firebase.database().ref(TABLE_ITEMS + "/" + id).remove().then(() => {
         console.log("Remove db ", id)
       }).catch((error) => {
         console.error(error)
@@ -200,7 +216,7 @@
     var colName = $(this).closest('[data-colname]').data("colname");
     var data = {};
     var value = $(this).val();
-    if($(this).attr("type")==="number") value = parseFloat($(this).val());
+    if ($(this).attr("type") === "number") value = parseFloat($(this).val());
     data[colName] = value;
     updateUserData(id, data);
   });
@@ -241,4 +257,18 @@
     }
 
   });
+
+  function categoryBox(className, selected) {
+    fetch(firebaseConfig.databaseURL + "/" + TABLE_CATEGORY + ".json").then(resp => resp.json()).then(items => {
+      $(document).find(className).append('<option></option>');
+      for (var id in items) {
+        var item = items[id];
+        $(document).find(className).append('<option value="' + id + '">' + item.name + '</option>');
+      }
+    });
+  }
+
+  $(function () {
+    categoryBox(".category-box");
+  })
 </script>

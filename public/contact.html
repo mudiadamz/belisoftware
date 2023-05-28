@@ -28,44 +28,38 @@
 
 <div data-component="header"></div>
 
-<!-- Start Content Page -->
-<div class="container-fluid bg-light py-5">
-    <div class="col-md-6 m-auto text-center">
-        <h1 class="h1">Contact Us</h1>
-        <p>
-            Should you need any further information, please do not hesitate to contact us.
-
-        </p>
-    </div>
-</div>
-
 
 <!-- Start Contact -->
 <div class="container py-5">
-    <div class="row py-5">
-        <form class="col-md-9 m-auto" method="post" role="form">
+    <div class="row">
+        <form class="col-md-9 m-auto" method="post" role="form" id="mainForm">
+
+            <h1 class="h1">Contact Us</h1>
+            <p>
+                Should you need any further information, please do not hesitate to contact us.
+
+            </p>
+
             <div class="row">
                 <div class="form-group col-md-6 mb-3">
                     <label for="name">Name</label>
-                    <input type="text" class="form-control mt-1" id="name" name="name" placeholder="Name">
+                    <input type="text" class="form-control mt-1" id="name" name="name" placeholder="Name" required
+                           minlength="3">
                 </div>
                 <div class="form-group col-md-6 mb-3">
                     <label for="email">Email</label>
-                    <input type="email" class="form-control mt-1" id="email" name="email" placeholder="Email">
+                    <input type="email" class="form-control mt-1" id="email" name="email" placeholder="Email" required
+                           minlength="8">
                 </div>
-            </div>
-            <div class="mb-3">
-                <label for="subject">Subject</label>
-                <input type="text" class="form-control mt-1" id="subject" name="subject" placeholder="Subject">
             </div>
             <div class="mb-3">
                 <label for="message">Message</label>
                 <textarea class="form-control mt-1" id="message" name="message" placeholder="Message"
-                          rows="8"></textarea>
+                          rows="8" required minlength="20"></textarea>
             </div>
             <div class="row">
                 <div class="col text-end mt-2">
-                    <button type="submit" class="btn btn-success btn-lg px-3">Let’s Talk</button>
+                    <button type="submit" class="btn btn-primary btn-lg px-3">Submit</button>
                 </div>
             </div>
         </form>
@@ -76,13 +70,21 @@
 <div data-component="footer"></div>
 
 <!-- Start Script -->
-<script src="assets/js/jquery-1.11.0.min.js"></script>
-<script src="assets/js/jquery-migrate-1.2.1.min.js"></script>
+<script src="assets/js/jquery.min.js"></script>
 <script src="assets/js/bootstrap.bundle.min.js"></script>
-<script src="assets/js/templatemo.js"></script>
 <script src="assets/js/custom.js"></script>
 <script src="assets/js/component.js"></script>
 <!-- End Script -->
+<script>
+  $(document).on("submit", "#mainForm", function (e) {
+    e.preventDefault();
+    $(this).find("[type='submit']").prop("disabled", true);
+    fetch("/contact").then(resp => resp.json()).catch(error => {
+      window.alert("Your message is submitted. Thank you for your feedback!");
+      $(this).find("[type='submit']").prop("disabled", false);
+    });
+  })
+</script>
 </body>
 
 </html>
